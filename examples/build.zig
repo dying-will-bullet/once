@@ -4,7 +4,8 @@ const pkg_name = "once";
 const pkg_path = "../src/lib.zig";
 
 const examples = .{
-    "default",
+    "lazy",
+    "once_cell",
 };
 
 pub fn build(b: *std.build.Builder) void {
