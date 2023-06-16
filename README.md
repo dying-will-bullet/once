@@ -1,9 +1,12 @@
-# once
+<h1 align="center"> once ⛳ </h1>
 
-Create a project using this template and run following command to replace project name.
+[![CI](https://github.com/Hanaasagi/struct-env/actions/workflows/ci.yaml/badge.svg)](https://github.com/Hanaasagi/struct-env/actions/workflows/ci.yaml)
+![](https://img.shields.io/badge/language-zig-%23ec915c)
 
-```Bash
-find . -type f -exec sed -i "s/once/<YOUR PROJECT NAME>/g" {} \;
-```
+## Examples
 
-Then [add a license to your project](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-a-license-to-a-repository).
+## Installation
+
+## LICENSE
+
+MIT License Copyright (c) 2023, Hanaasagi
