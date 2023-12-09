@@ -34,7 +34,7 @@ pub fn OnceCell(comptime T: type) type {
 
         cell: T,
         mutex: std.Thread.Mutex,
-        done: std.atomic.Atomic(u32),
+        done: std.atomic.Value(u32),
         const Self = @This();
 
         /// Creates a new empty cell.
@@ -42,7 +42,7 @@ pub fn OnceCell(comptime T: type) type {
             return Self{
                 .cell = undefined,
                 .mutex = std.Thread.Mutex{},
-                .done = std.atomic.Atomic(u32).init(0b00),
+                .done = std.atomic.Value(u32).init(0b00),
             };
         }
 
@@ -51,7 +51,7 @@ pub fn OnceCell(comptime T: type) type {
             return Self{
                 .cell = value,
                 .mutex = std.Thread.Mutex{},
-                .done = std.atomic.Atomic(u32).init(0b01),
+                .done = std.atomic.Value(u32).init(0b01),
             };
         }
 
@@ -93,7 +93,7 @@ pub fn OnceCell(comptime T: type) type {
             if (self.isInitialize()) {
                 defer self.done.store(0b00, .Release);
 
-                var cell = self.cell;
+                const cell = self.cell;
                 self.cell = undefined;
                 return cell;
             }
@@ -128,7 +128,7 @@ pub fn OnceCell(comptime T: type) type {
             defer self.mutex.unlock();
 
             // The first thread to acquire the mutex gets to run the initializer
-            if (self.done.loadUnchecked() == 0b00) {
+            if (self.done.raw == 0b00) {
                 self.cell = f();
                 defer self.done.store(0b01, .Release);
                 std.Thread.Futex.wake(&self.done, 1000);
@@ -160,7 +160,7 @@ var globalMap = OnceCell(std.StringHashMap(i32)).empty();
 
 test "test global map" {
     _ = globalMap.getOrInit(returnMap);
-    var r1 = globalMap.get().?;
+    const r1 = globalMap.get().?;
     try r1.*.put("a", 1);
 
     try testing.expect(r1.*.get("b") != null);
@@ -168,7 +168,7 @@ test "test global map" {
 
     // must be same hashmap
     _ = globalMap.getOrInit(returnMap);
-    var r2 = globalMap.get().?;
+    const r2 = globalMap.get().?;
 
     try testing.expect(r2.*.get("a") != null);
     try testing.expect(r2.*.get("a").? == 1);
@@ -186,7 +186,7 @@ test "test global map take" {
     try testing.expect(r1.get("b") != null);
     try testing.expect(r1.get("b").? == 2);
 
-    var r2 = globalMap2.take();
+    const r2 = globalMap2.take();
     try testing.expect(r2 == null);
 
     _ = globalMap2.getOrInit(returnMap);
@@ -274,11 +274,11 @@ var cell4 = OnceCell(i32).empty();
 var LazyMap = Lazy(std.StringHashMap(i32), returnMap).init();
 
 test "test lazy" {
-    var map = LazyMap.get();
+    const map = LazyMap.get();
     defer map.*.deinit();
     try map.*.put("c", 3);
 
-    var map2 = LazyMap.get();
+    const map2 = LazyMap.get();
 
     try testing.expect(map2.*.get("c") != null);
     try testing.expect(map2.*.get("c").? == 3);
@@ -317,10 +317,10 @@ fn returnMutexMap() MutexStringHashMap {
 var LazyMutexMap = Lazy(MutexStringHashMap, returnMutexMap).init();
 
 test "test lazy mutex map" {
-    var obj = LazyMutexMap.get();
+    const obj = LazyMutexMap.get();
     defer obj.*.deinit();
 
-    var map = obj.*.borrow();
+    const map = obj.*.borrow();
     try map.*.put("v", 0);
     obj.*.restore();
 
@@ -330,7 +330,7 @@ test "test lazy mutex map" {
         handle.* = try std.Thread.spawn(.{}, struct {
             fn thread_fn(x: u8) !void {
                 _ = x;
-                var o = LazyMutexMap.get();
+                const o = LazyMutexMap.get();
                 var m = o.*.borrow();
 
                 const v = m.get("v").?;

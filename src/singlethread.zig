@@ -65,7 +65,7 @@ pub fn OnceCell(comptime T: type) type {
                 return null;
             }
 
-            var cell = self.cell.?;
+            const cell = self.cell.?;
             self.cell = null;
             return cell;
         }
@@ -89,7 +89,7 @@ var cell3 = OnceCell(i32).empty();
 test "test init once" {
     _ = cell3.getOrInit(incrShared);
     _ = cell3.getOrInit(incrShared);
-    var v = cell3.get();
+    const v = cell3.get();
 
     try testing.expect(v != null);
     try testing.expect(v.?.* == 1);
@@ -105,11 +105,11 @@ fn returnMap() std.StringHashMap(i32) {
 var LazyMap = Lazy(std.StringHashMap(i32), returnMap).init();
 
 test "test lazy" {
-    var map = LazyMap.get();
+    const map = LazyMap.get();
     defer map.*.deinit();
     try map.*.put("c", 3);
 
-    var map2 = LazyMap.get();
+    const map2 = LazyMap.get();
 
     try testing.expect(map2.*.get("c") != null);
     try testing.expect(map2.*.get("c").? == 3);
